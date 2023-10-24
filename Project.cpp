@@ -7,11 +7,8 @@
 #include "LoadShaders.h"
 
 //GLM
-#include <glm/glm.hpp> //includes GLM
 #include "glm/ext/vector_float3.hpp"
-#include "glm/fwd.hpp"
 #include <glm/ext/matrix_transform.hpp> // GLM: translate, rotate
-#include <glm/ext/matrix_clip_space.hpp> // GLM: perspective and ortho 
 #include <glm/gtc/type_ptr.hpp> // GLM: access to the value_ptr
 
 //STB
@@ -28,6 +25,7 @@
 #include "FileReader.h"
 
 using namespace std;
+using namespace glm;
 
 // to use this example you will need to download the header files for GLM put them into a folder which you will reference in
 // properties -> VC++ Directories -> libraries
@@ -74,20 +72,20 @@ const int trianglesGrid = trianglesRow * squaresRow;
 
 //Transformations
 //Relative position within world space
-glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f);
+vec3 cameraPosition = vec3(0.0f, 0.0f, 3.0f);
 //The direction of travel
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+vec3 cameraFront = vec3(0.0f, 0.0f, -1.0f);
 //Up position within world space
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+vec3 cameraUp = vec3(0.0f, 1.0f, 0.0f);
 
 //Scene perception construction; model & view
-glm::mat4 model;
-glm::mat4 projection;
+mat4 model;
+mat4 projection;
 
 //Camera sideways rotation
-float yaw = -90.0f;
+float cameraYaw = -90.0f;
 //Camera vertical rotation
-float pitch = 0.0f;
+float cameraPitch = 0.0f;
 //Determines if first entry of mouse into window
 bool mouseFirstEnter = true;
 //Positions of camera from given last frame
@@ -241,16 +239,16 @@ init(void)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	//Model matrix
-	model = glm::mat4(1.0f);
+	model = mat4(1.0f);
 	//Scaling to zoom in
-	model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));
+	model = scale(model, vec3(2.0f, 2.0f, 2.0f));
 	//Rotation to look up
-	model = glm::rotate(model, glm::radians(40.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	model = rotate(model, radians(40.0f), vec3(1.0f, 0.0f, 0.0f));
 	//Movement to reposition
-	model = glm::translate(model, glm::vec3(0.0f, 0.0f, -1.0f));
+	model = translate(model, vec3(0.0f, 0.0f, -1.0f));
 
 	//Projection matrix
-	projection = glm::perspective(glm::radians(fov), (float)SCREEN_SIZE_X / (float)SCREEN_SIZE_Y, 0.1f, 100.0f);
+	projection = perspective(radians(fov), (float)SCREEN_SIZE_X / (float)SCREEN_SIZE_Y, 0.1f, 100.0f);
 
 	//MAY BE PROBLEMATIC
 	glEnableVertexAttribArray(0);
@@ -276,8 +274,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	xOffset *= sensitivity;
 	yOffset *= sensitivity;
 
-	yaw += xOffset;
-	pitch += yOffset; //may be necessary
+	cameraYaw += xOffset;
+	cameraPitch += yOffset; //may be necessary
 
 	//Prevention of looking behind oneself - appears to be buggy
 	/*if (pitch > 89.0f)
@@ -290,13 +288,13 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	}*/
 
 	//Direction vector
-	glm::vec3 direction;
-	direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-	direction.y = sin(glm::radians(pitch));
-	direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-	cameraFront = glm::normalize(direction);
+	vec3 direction;
+	direction.x = cos(radians(cameraYaw)) * cos(radians(cameraPitch));
+	direction.y = sin(radians(cameraPitch));
+	direction.z = sin(radians(cameraYaw)) * cos(radians(cameraPitch));
+	cameraFront = normalize(direction);
 
-	cout << pitch;
+	cout << cameraPitch;
 }
 
 void processInput(GLFWwindow* window)
@@ -315,11 +313,11 @@ void processInput(GLFWwindow* window)
 	}
 	else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) //Right
 	{
-		cameraPosition += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraMovementSpeed;
+		cameraPosition += normalize(cross(cameraFront, cameraUp)) * cameraMovementSpeed;
 	}
 	else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) //Left
 	{
-		cameraPosition -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraMovementSpeed;
+		cameraPosition -= normalize(cross(cameraFront, cameraUp)) * cameraMovementSpeed;
 	}
 	//Closes window on 'exit' key press
 	else if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) //Direction
@@ -374,15 +372,15 @@ display(void)
 	glEnable(GL_CULL_FACE);
 
 	//Transformations
-	glm::mat4 view;
-	view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp); //Sets the position of the viewer, the movement direction in relation to it & the world up direction
+	mat4 view;
+	view = lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp); //Sets the position of the viewer, the movement direction in relation to it & the world up direction
 
 	// Adding all matrices up to create combined matrix
-	glm::mat4 mvp = projection * view * model;
+	mat4 mvp = projection * view * model;
 
 	//adding the Uniform to the shader
 	int mvpLoc = glGetUniformLocation(program, "mvp");
-	glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+	glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, value_ptr(mvp));
 
 	//modify position using mv & p
 	glBindVertexArray(VAOs[0]); //Bind buffer object to render;

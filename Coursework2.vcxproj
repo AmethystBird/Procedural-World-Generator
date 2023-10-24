@@ -74,7 +74,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>E:\Work\Plymouth\Soft356\SampleCode\lib\;$(IncludePath)</IncludePath>
+    <IncludePath>E:\Work\Plymouth\Soft356\SampleCode\lib\;C:\Users\Public\OpenGL\include\glm;$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
